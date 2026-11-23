@@ -1,0 +1,38 @@
+Projet application mobile
+-liste de votre choix
+-formulaire crud
+-upload d'image
+-firebase
+
+notre pak : une application de recette de cuisine 
+on a un crud normal pour une application de recette de cuisine , avec qlq petit fonctionaliter comme 
+cree notre propore recette ou filter les recettes par rapport a un aliments ect....
+des ajouts supplementaire sur les fonctionalites sont encore a voir 
+
+notre apk se base sur tous ce qu'on a appris des different tp qu'on a effectuer avec Mr Rojo 
+dans se pc les fichier sont dans : /home/itu/S5/Mr Rojo/inf304-ionic-vue-ts/tp-partie2/.
+tous les fichier dans se repertoire sont nos entrainement pour faire se projet 
+
+App (Vue code)  →  firebase SDK  →  HTTPS  →  Google's Firestore servers (your region)
+                                                 ↑
+                                     Security Rules check every request
+                                     
+
+
+Details :
+l'appli sert a noter les recettes de cuisine creer par l'utilisateur
+quand on creer une recette, on peut uploader une image comme appercu
+dans une recette, on a une section ingredients et une section preparation, et une section remarque, tout deux editables (du texte)
+
+Fonctionnalite :
+creation de recette
+recherche de recette
+recherche par categorie
+recherche par ingredient
+creation, edition, suppression
+
+Base de donnee :
+Categorie(id, libelle)
+Ingredient(id, libelle)
+Recette(id, libelle, image, id_categorie, preparation, remarque, date_creation, date_derniere_modif)
+Recette_ingredients(id, id_mere, id_ingredient)

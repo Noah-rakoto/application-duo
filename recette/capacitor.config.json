@@ -1,0 +1,8 @@
+{
+  "appId": "mg.itu.recettes",
+  "appName": "Recettes",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "http"
+  }
+}
