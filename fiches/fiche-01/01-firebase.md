@@ -14,7 +14,7 @@ Une seule personne le fait, puis elle partage l'accès.
 1. Aller sur **console.firebase.google.com**, puis **Créer un projet** (ex. « recettes-duo »). Google Analytics n'est pas utile.
 2. **Build → Firestore Database → Créer une base de données**.
    - Région : `europe-west1` (ou une autre en Europe).
-   - **Mode test**. Notez la date d'expiration affichée : vous écrirez les vraies règles en fiche 08.
+   - **Mode test**. Notez la date d'expiration affichée (2026, 12, 24): vous écrirez les vraies règles en fiche 08.
 3. **Paramètres du projet** (roue dentée) → **Vos applications** → icône **Web `</>`**.
    Enregistrez une application et **gardez la page ouverte** : elle affiche `firebaseConfig`.
 4. **Paramètres du projet → Utilisateurs et autorisations** : ajoutez l'adresse Gmail du binôme.
