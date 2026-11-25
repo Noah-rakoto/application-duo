@@ -15,6 +15,9 @@
       <ion-list v-else>
         <ion-item v-for="c in categories" :key="c.id">
           <ion-label>{{ c.libelle }}</ion-label>
+          <ion-text v-for="r in recettes" :key="r.id">
+            <p v-if="r.id_categorie == c.id">{{ r.libelle }}</p>
+          </ion-text>
         </ion-item>
       </ion-list>
     </ion-content>
@@ -23,21 +26,26 @@
 
 <script setup lang="ts">
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonLabel, IonList, IonItem, IonSpinner } from '@ionic/vue';
-import type { Categorie } from '@/types/recette';
+import type { Categorie, Ingredient, Recette } from '@/types/recette';
 import { ref, onMounted } from 'vue';
 import { getCategories } from '@/services/categorie_service';
+import ingredientService from '@/services/ingredientService';
+import recetteService from '@/services/recetteService';
 
 const categories = ref<Categorie[]>([]);
 const erreur = ref<string | null>(null);
 const chargement = ref(true);
+const recettes = ref<Recette[] | null>(null);
 
 async function charger() {
   chargement.value = true;
   erreur.value = null;
   try {
     categories.value = await getCategories();
+    recettes.value = await recetteService.getRecettes();
+    console.log(await recetteService.getRecette("B6HgnTfdzQukvKmWb3zlka"));
   } catch (e) {
-    erreur.value = "Impossible de joindre Firebase";
+    erreur.value = e instanceof Error ? e.message : String(e);
     console.error(e);
   } finally {
     chargement.value = false;
