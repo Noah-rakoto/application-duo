@@ -5,13 +5,16 @@ import { collection, doc, getDoc, getDocs, query, where } from "firebase/firesto
 export default {
   async getRecettes(): Promise<Recette[]> {
     const snapshot = await getDocs(collection(db, "recettes"));
+    // snapshot.docs renvoie un NOUVEAU tableau a chaque lecture :
+    // on le garde dans une variable pour que le tri ne soit pas perdu
+    const docs = snapshot.docs;
     // trier du plus recent au plus ancien
-    snapshot.docs.sort((a, b) => {
+    docs.sort((a, b) => {
         const dateA = a.data().date_creation.toMillis();
         const dateB = b.data().date_creation.toMillis();
         return dateB - dateA;
     } );
-    return snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}) as Recette);
+    return docs.map((doc) => ({id: doc.id, ...doc.data()}) as Recette);
   },
 
   // get la recette avec ses ingredients (lorsqu'on clique sur une recette)
