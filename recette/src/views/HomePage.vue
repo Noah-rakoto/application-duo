@@ -28,7 +28,7 @@
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonLabel, IonList, IonItem, IonSpinner } from '@ionic/vue';
 import type { Categorie, Ingredient, Recette } from '@/types/recette';
 import { ref, onMounted } from 'vue';
-import { getCategories } from '@/services/categorie_service';
+import { getCategories } from '@/services/categorieService';
 import ingredientService from '@/services/ingredientService';
 import recetteService from '@/services/recetteService';
 
@@ -43,7 +43,6 @@ async function charger() {
   try {
     categories.value = await getCategories();
     recettes.value = await recetteService.getRecettes();
-    console.log(await recetteService.getRecette("B6HgnTfdzQukvKmWb3zlka"));
   } catch (e) {
     erreur.value = e instanceof Error ? e.message : String(e);
     console.error(e);
