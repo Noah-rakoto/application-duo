@@ -39,3 +39,12 @@ export interface LigneIngredient {
 export interface RecetteDetail extends Recette {
     lignes: LigneIngredient[];
 }
+// pour l'ajout d'une nouvelle recette
+export interface NouvelleRecette {
+  libelle: string;
+  image: string | null;
+  id_categorie: string;
+  preparation: string;
+  remarque: string;
+  ingredients: { libelle: string; quantite: string }[];   // les lignes du formulaire
+}

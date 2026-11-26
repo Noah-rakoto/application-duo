@@ -1,6 +1,7 @@
 import { db } from "@/firebase";
-import type { Ingredient, Recette, RecetteDetail } from "@/types/recette";
-import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
+import type { Ingredient, Recette, RecetteDetail , NouvelleRecette} from "@/types/recette";
+import { collection, doc, getDoc, getDocs, query, serverTimestamp, where, writeBatch } from "firebase/firestore";
+import  Ingredients  from "@/services/ingredientService";
 
 export default {
   async getRecettes(): Promise<Recette[]> {
@@ -65,4 +66,51 @@ export default {
 
     return { ...recette, lignes };
   },
+  // crée une recette et ses lignes d'ingrédients, renvoie l'ID de la recette créée
+  async creerRecette(nouvelle: NouvelleRecette): Promise<string> {
+    // 1. pour chaque ligne du formulaire, on obtient l'ingrédient (existant ou créé)
+    //    Promise.all lance toutes les recherches en parallèle et attend qu'elles soient toutes finies
+    //    (un forEach sans await n'attendrait pas : on n'aurait pas les IDs à temps)
+    const ingredients = await Promise.all(
+      // on transforme chaque ligne en une promesse qui renvoie l'Ingredient
+      nouvelle.ingredients.map((ligne) => Ingredients.trouverOuCreerIngredient(ligne.libelle))
+    );
+
+    // 2. on ouvre un batch : toutes les écritures seront envoyées ensemble, en une seule fois
+    const batch = writeBatch(db);
+
+    // 3. on prépare la référence de la future recette, sans encore rien écrire :
+    //    doc(collection(...)) génère un ID tout de suite, côté client
+    const recetteRef = doc(collection(db, "recettes"));
+
+    // 4. on prévoit la création du document recette dans le batch
+    batch.set(recetteRef, {
+      libelle: nouvelle.libelle.trim(),            // texte sans espaces autour
+      image: nouvelle.image,                       // null pour l'instant (l'image arrive en fiche 06)
+      id_categorie: nouvelle.id_categorie,         // l'ID de la catégorie choisie
+      preparation: nouvelle.preparation.trim(),    // texte sans espaces autour
+      remarque: nouvelle.remarque.trim(),          // texte sans espaces autour (peut être vide)
+      date_creation: serverTimestamp(),            // date fixée par le serveur Firestore
+      date_derniere_modif: serverTimestamp(),      // même date à la création
+    });
+
+    // 5. on prévoit un document recette_ingredients par ligne du formulaire
+    nouvelle.ingredients.forEach((ligne, index) => {
+      // nouvelle référence avec un ID auto-généré dans la collection de liaison
+      const lienRef = doc(collection(db, "recette_ingredients"));
+      // on relie la recette (ID connu grâce à l'étape 3) et l'ingrédient (même index que la ligne)
+      batch.set(lienRef, {
+        id_recette: recetteRef.id,              // l'ID de la recette préparée plus haut
+        id_ingredient: ingredients[index].id,   // l'ID de l'ingrédient obtenu à l'étape 1
+        quantite: ligne.quantite.trim(),        // texte sans espaces autour
+      });
+    });
+
+    // 6. on envoie le batch : soit tout est écrit, soit rien ne l'est
+    await batch.commit();
+
+    // on renvoie l'ID de la recette créée
+    return recetteRef.id;
+  },
+
 };
