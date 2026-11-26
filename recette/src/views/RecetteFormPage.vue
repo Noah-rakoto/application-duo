@@ -6,11 +6,18 @@
         <ion-buttons slot="start">
           <ion-back-button default-href="/tabs/recettes" />
         </ion-buttons>
-        <ion-title>Nouvelle recette</ion-title>
+        <ion-title>{{ enEdition ? 'Éditer la recette' : 'Nouvelle recette' }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
     <ion-content class="ion-padding">
+      <!-- Chargement de la recette (mode édition) -->
+      <div v-if="chargement" class="ion-text-center ion-padding">
+        <ion-spinner />
+      </div>
+
+      <!-- Formulaire, affiché une fois la recette chargée -->
+      <template v-else>
       <ion-input v-model="libelle" label="Libellé" label-placement="floating" fill="outline"
         :class="{ 'ion-invalid ion-touched': erreurs.libelle }" :error-text="erreurs.libelle" />
 
@@ -41,6 +48,7 @@
       <ion-button expand="block" class="ion-margin-top" :disabled="envoiEnCours" @click="enregistrer">
         Enregistrer
       </ion-button>
+      </template>
     </ion-content>
   </ion-page>
 </template>
@@ -50,16 +58,22 @@ import { ref, onMounted } from 'vue';
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent,
   IonInput, IonSelect, IonSelectOption, IonTextarea, IonItem, IonButton, IonIcon, IonNote,
-  loadingController, toastController, useIonRouter,
+  loadingController, toastController, useIonRouter,IonSpinner
 } from '@ionic/vue';
 import { trashOutline } from 'ionicons/icons';
 import type { Categorie, NouvelleRecette } from '@/types/recette';
 import { getCategories } from '@/services/categorieService';
 import recetteService from '@/services/recetteService';
+import { useRoute } from 'vue-router';
 
 interface LigneFormulaire { libelle: string; quantite: string }
 
 const ionRouter = useIonRouter();
+const route = useRoute();
+
+// mode : édition si l'URL contient un id (/tabs/recettes/:id/modifier), création sinon
+const idRecette = route.params.id ? String(route.params.id) : null;
+const enEdition = idRecette !== null;
 
 const categories = ref<Categorie[]>([]);
 const libelle = ref('');
@@ -69,6 +83,8 @@ const remarque = ref('');
 const lignes = ref<LigneFormulaire[]>([{ libelle: '', quantite: '' }]);
 const erreurs = ref<Record<string, string>>({});
 const envoiEnCours = ref(false);
+// le spinner ne s'affiche qu'en édition (en création il n'y a rien à charger)
+const chargement = ref(enEdition);
 
 function ajouterLigne() {
   lignes.value.push({ libelle: '', quantite: '' });
@@ -90,7 +106,6 @@ function valider(): boolean {
 
 async function enregistrer() {
   if (!valider()) return;
-
   const loading = await loadingController.create({ message: 'Enregistrement…' });
   await loading.present();
   envoiEnCours.value = true;
@@ -108,12 +123,22 @@ async function enregistrer() {
         .map((l) => ({ libelle: l.libelle, quantite: l.quantite })),
     };
 
-    const id = await recetteService.creerRecette(nouvelle);
+    if (idRecette) {
+      // édition : on met à jour la recette existante
+      await recetteService.modifierRecette(idRecette, nouvelle);
+    } else {
+      // création : on crée une nouvelle recette
+      const id = await recetteService.creerRecette(nouvelle);
+      const toast = await toastController.create({ message: 'Recette enregistrée', duration: 2000, color: 'success' });
+      await toast.present();
+      ionRouter.navigate(`/tabs/recettes/${id}`, 'forward', 'replace');
+      return;
+    }
 
-    const toast = await toastController.create({ message: 'Recette enregistrée', duration: 2000, color: 'success' });
+    const toast = await toastController.create({ message: 'Recette modifiée', duration: 2000, color: 'success' });
     await toast.present();
-
-    ionRouter.navigate(`/tabs/recettes/${id}`, 'forward', 'replace');
+    // 'back' : on revient sur la page Détail déjà ouverte au lieu d'en empiler une deuxième
+    ionRouter.navigate(`/tabs/recettes/${idRecette}`, 'back');
   } catch (e) {
     const toast = await toastController.create({
       message: e instanceof Error ? e.message : "Erreur lors de l'enregistrement",
@@ -127,12 +152,32 @@ async function enregistrer() {
     await loading.dismiss();
   }
 }
-
 onMounted(async () => {
   try {
     categories.value = await getCategories();
+
+    if (idRecette) {
+      const recette = await recetteService.getRecette(idRecette);
+      libelle.value = recette.libelle;
+      idCategorie.value = recette.id_categorie;
+      preparation.value = recette.preparation;
+      remarque.value = recette.remarque ?? '';
+      // on transforme les lignes de la recette ({ ingredient, quantite })
+      // en lignes du formulaire ({ libelle, quantite })
+      lignes.value = recette.lignes.map((l) => ({ libelle: l.ingredient.libelle, quantite: l.quantite }));
+      // une recette sans ingrédient : on garde une ligne vide à remplir
+      if (lignes.value.length === 0) lignes.value = [{ libelle: '', quantite: '' }];
+    }
   } catch (e) {
+    const toast = await toastController.create({
+      message: e instanceof Error ? e.message : 'Erreur lors du chargement',
+      duration: 3000,
+      color: 'danger',
+    });
+    await toast.present();
     console.error(e);
+  } finally {
+    chargement.value = false;
   }
 });
 </script>

@@ -7,6 +7,16 @@
           <ion-back-button default-href="/tabs/recettes" />
         </ion-buttons>
         <ion-title>{{ recette?.libelle ?? 'Recette' }}</ion-title>
+
+        <!-- Éditer / Supprimer, seulement une fois la recette chargée -->
+        <ion-buttons v-if="recette" slot="end">
+          <ion-button :router-link="`/tabs/recettes/${recette.id}/modifier`" aria-label="Éditer">
+            <ion-icon slot="icon-only" :icon="createOutline" />
+          </ion-button>
+          <ion-button color="danger" aria-label="Supprimer" @click="supprimer">
+            <ion-icon slot="icon-only" :icon="trashOutline" />
+          </ion-button>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
@@ -66,14 +76,17 @@ import { ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent,
-  IonSpinner, IonText, IonButton, IonBadge, IonList, IonItem, IonLabel, onIonViewWillEnter,
+  IonSpinner, IonText, IonButton, IonBadge, IonList, IonItem, IonLabel, IonIcon, onIonViewWillEnter,
+  alertController, loadingController, toastController, useIonRouter,
 } from '@ionic/vue';
+import { createOutline, trashOutline } from 'ionicons/icons';
 import type { Categorie, RecetteDetail } from '@/types/recette';
 import { getCategories } from '@/services/categorieService';
 import recetteService from '@/services/recetteService';
 import { formatDate } from '../../utils/format';
 
 const route = useRoute();
+const ionRouter = useIonRouter();
 
 const recette = ref<RecetteDetail | null>(null);
 const categories = ref<Categorie[]>([]);
@@ -101,6 +114,48 @@ async function charger() {
     console.error(e);
   } finally {
     chargement.value = false;
+  }
+}
+
+async function supprimer() {
+  if (!recette.value) return;
+
+  // 1. on demande confirmation
+  const alerte = await alertController.create({
+    header: 'Supprimer la recette ?',
+    message: 'Cette action est définitive.',
+    buttons: [
+      { text: 'Annuler', role: 'cancel' },
+      { text: 'Supprimer', role: 'destructive' },
+    ],
+  });
+  await alerte.present();
+  const { role } = await alerte.onDidDismiss();
+  if (role !== 'destructive') return; // annulé : rien ne change
+
+  // 2. chargement pendant la suppression
+  const loading = await loadingController.create({ message: 'Suppression…' });
+  await loading.present();
+
+  try {
+    await recetteService.supprimerRecette(recette.value.id);
+
+    const toast = await toastController.create({ message: 'Recette supprimée', duration: 2000, color: 'success' });
+    await toast.present();
+
+    // 3. retour à la liste ; 'replace' : la page Détail (d'une recette qui n'existe plus)
+    //    est retirée de l'historique
+    ionRouter.navigate('/tabs/recettes', 'back', 'replace');
+  } catch (e) {
+    const toast = await toastController.create({
+      message: e instanceof Error ? e.message : 'Erreur lors de la suppression',
+      duration: 3000,
+      color: 'danger',
+    });
+    await toast.present();
+    console.error(e);
+  } finally {
+    await loading.dismiss();
   }
 }
 

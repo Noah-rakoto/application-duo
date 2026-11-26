@@ -1,7 +1,21 @@
 import { db } from "@/firebase";
-import type { Ingredient, Recette, RecetteDetail , NouvelleRecette} from "@/types/recette";
-import { collection, doc, getDoc, getDocs, query, serverTimestamp, where, writeBatch } from "firebase/firestore";
-import  Ingredients  from "@/services/ingredientService";
+import type {
+  Ingredient,
+  Recette,
+  RecetteDetail,
+  NouvelleRecette,
+} from "@/types/recette";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  serverTimestamp,
+  where,
+  writeBatch,
+} from "firebase/firestore";
+import Ingredients from "@/services/ingredientService";
 
 export default {
   async getRecettes(): Promise<Recette[]> {
@@ -11,19 +25,18 @@ export default {
     const docs = snapshot.docs;
     // trier du plus recent au plus ancien
     docs.sort((a, b) => {
-        const dateA = a.data().date_creation.toMillis();
-        const dateB = b.data().date_creation.toMillis();
-        return dateB - dateA;
-    } );
-    return docs.map((doc) => ({id: doc.id, ...doc.data()}) as Recette);
+      const dateA = a.data().date_creation.toMillis();
+      const dateB = b.data().date_creation.toMillis();
+      return dateB - dateA;
+    });
+    return docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Recette);
   },
-
   // get la recette avec ses ingredients (lorsqu'on clique sur une recette)
   async getRecette(id: string): Promise<RecetteDetail> {
     const recetteRef = doc(db, "recettes", id);
     const recetteIngredientsQuery = query(
       collection(db, "recette_ingredients"),
-      where("id_recette", "==", id)
+      where("id_recette", "==", id),
     );
 
     const [recetteSnap, recetteIngredientsSnap, ingredientsSnap] =
@@ -42,15 +55,13 @@ export default {
       ...recetteSnap.data(),
     } as Recette;
     const ingredientsById = new Map<string, Ingredient>(
-      ingredientsSnap.docs.map(
-        (ingredientDoc): [string, Ingredient] => [
-          ingredientDoc.id,
-          {
-            id: ingredientDoc.id,
-            libelle: ingredientDoc.data().libelle,
-          },
-        ]
-      )
+      ingredientsSnap.docs.map((ingredientDoc): [string, Ingredient] => [
+        ingredientDoc.id,
+        {
+          id: ingredientDoc.id,
+          libelle: ingredientDoc.data().libelle,
+        },
+      ]),
     );
 
     const lignes = recetteIngredientsSnap.docs.map((lienDoc) => {
@@ -73,7 +84,9 @@ export default {
     //    (un forEach sans await n'attendrait pas : on n'aurait pas les IDs à temps)
     const ingredients = await Promise.all(
       // on transforme chaque ligne en une promesse qui renvoie l'Ingredient
-      nouvelle.ingredients.map((ligne) => Ingredients.trouverOuCreerIngredient(ligne.libelle))
+      nouvelle.ingredients.map((ligne) =>
+        Ingredients.trouverOuCreerIngredient(ligne.libelle),
+      ),
     );
 
     // 2. on ouvre un batch : toutes les écritures seront envoyées ensemble, en une seule fois
@@ -85,13 +98,13 @@ export default {
 
     // 4. on prévoit la création du document recette dans le batch
     batch.set(recetteRef, {
-      libelle: nouvelle.libelle.trim(),            // texte sans espaces autour
-      image: nouvelle.image,                       // null pour l'instant (l'image arrive en fiche 06)
-      id_categorie: nouvelle.id_categorie,         // l'ID de la catégorie choisie
-      preparation: nouvelle.preparation.trim(),    // texte sans espaces autour
-      remarque: nouvelle.remarque.trim(),          // texte sans espaces autour (peut être vide)
-      date_creation: serverTimestamp(),            // date fixée par le serveur Firestore
-      date_derniere_modif: serverTimestamp(),      // même date à la création
+      libelle: nouvelle.libelle.trim(), // texte sans espaces autour
+      image: nouvelle.image, // null pour l'instant (l'image arrive en fiche 06)
+      id_categorie: nouvelle.id_categorie, // l'ID de la catégorie choisie
+      preparation: nouvelle.preparation.trim(), // texte sans espaces autour
+      remarque: nouvelle.remarque.trim(), // texte sans espaces autour (peut être vide)
+      date_creation: serverTimestamp(), // date fixée par le serveur Firestore
+      date_derniere_modif: serverTimestamp(), // même date à la création
     });
 
     // 5. on prévoit un document recette_ingredients par ligne du formulaire
@@ -100,9 +113,9 @@ export default {
       const lienRef = doc(collection(db, "recette_ingredients"));
       // on relie la recette (ID connu grâce à l'étape 3) et l'ingrédient (même index que la ligne)
       batch.set(lienRef, {
-        id_recette: recetteRef.id,              // l'ID de la recette préparée plus haut
-        id_ingredient: ingredients[index].id,   // l'ID de l'ingrédient obtenu à l'étape 1
-        quantite: ligne.quantite.trim(),        // texte sans espaces autour
+        id_recette: recetteRef.id, // l'ID de la recette préparée plus haut
+        id_ingredient: ingredients[index].id, // l'ID de l'ingrédient obtenu à l'étape 1
+        quantite: ligne.quantite.trim(), // texte sans espaces autour
       });
     });
 
@@ -113,4 +126,78 @@ export default {
     return recetteRef.id;
   },
 
+  async modifierRecette(id: string, recette: NouvelleRecette): Promise<void> {
+    // 1. en parallèle :
+    //    - on obtient l'ingrédient (existant ou créé) pour chaque ligne du formulaire
+    //    - on récupère les anciennes lignes de cette recette dans recette_ingredients
+    const [ingredients, anciennesLignesSnap] = await Promise.all([
+      Promise.all(
+        recette.ingredients.map((ligne) =>
+          Ingredients.trouverOuCreerIngredient(ligne.libelle),
+        ),
+      ),
+      getDocs(
+        query(
+          collection(db, "recette_ingredients"),
+          where("id_recette", "==", id),
+        ),
+      ),
+    ]);
+
+    const batch = writeBatch(db);
+
+    // 2. on met à jour la recette existante
+    //    update (et pas set) : on ne touche qu'à ces champs, date_creation est conservée
+    const recetteRef = doc(db, "recettes", id);
+    batch.update(recetteRef, {
+      libelle: recette.libelle.trim(),
+      image: recette.image,
+      id_categorie: recette.id_categorie,
+      preparation: recette.preparation.trim(),
+      remarque: recette.remarque.trim(),
+      date_derniere_modif: serverTimestamp(),
+    });
+
+    // 3. on supprime toutes les anciennes lignes d'ingrédients de la recette
+    anciennesLignesSnap.docs.forEach((lienDoc) => {
+      batch.delete(lienDoc.ref);
+    });
+
+    // 4. on recrée une ligne par ingrédient du formulaire (comme dans creerRecette)
+    recette.ingredients.forEach((ligne, index) => {
+      const lienRef = doc(collection(db, "recette_ingredients"));
+      batch.set(lienRef, {
+        id_recette: id, // l'ID de la recette existante
+        id_ingredient: ingredients[index].id,
+        quantite: ligne.quantite.trim(),
+      });
+    });
+
+    // 5. on envoie tout d'un coup : soit tout est écrit, soit rien ne l'est
+    await batch.commit();
+  },
+
+  async supprimerRecette(id: string): Promise<void> {
+    // 1. on récupère les lignes d'ingrédients de cette recette
+    const lignesSnap = await getDocs(
+      query(
+        collection(db, "recette_ingredients"),
+        where("id_recette", "==", id),
+      ),
+    );
+
+    const batch = writeBatch(db);
+
+    // 2. on supprime la recette
+    batch.delete(doc(db, "recettes", id));
+
+    // 3. on supprime toutes ses lignes d'ingrédients
+    //    (les ingrédients eux-mêmes restent : d'autres recettes peuvent les utiliser)
+    lignesSnap.docs.forEach((lienDoc) => {
+      batch.delete(lienDoc.ref);
+    });
+
+    // 4. on envoie tout d'un coup et on attend la fin
+    await batch.commit();
+  },
 };
