@@ -11,22 +11,11 @@
     </ion-header>
 
     <ion-content class="ion-padding">
-      <ion-input
-        v-model="libelle"
-        label="Libellé"
-        label-placement="floating"
-        fill="outline"
-        :class="{ 'ion-invalid ion-touched': erreurs.libelle }"
-        :error-text="erreurs.libelle"
-      />
+      <ion-input v-model="libelle" label="Libellé" label-placement="floating" fill="outline"
+        :class="{ 'ion-invalid ion-touched': erreurs.libelle }" :error-text="erreurs.libelle" />
 
-      <ion-select
-        v-model="idCategorie"
-        label="Catégorie"
-        label-placement="floating"
-        fill="outline"
-        class="ion-margin-top"
-      >
+      <ion-select v-model="idCategorie" label="Catégorie" label-placement="floating" fill="outline"
+        class="ion-margin-top">
         <ion-select-option v-for="c in categories" :key="c.id" :value="c.id">{{ c.libelle }}</ion-select-option>
       </ion-select>
       <ion-note v-if="erreurs.categorie" color="danger">{{ erreurs.categorie }}</ion-note>
@@ -42,27 +31,12 @@
       <ion-note v-if="erreurs.ingredients" color="danger">{{ erreurs.ingredients }}</ion-note>
       <ion-button fill="outline" class="ion-margin-top" @click="ajouterLigne">+ Ajouter un ingrédient</ion-button>
 
-      <ion-textarea
-        v-model="preparation"
-        label="Préparation"
-        label-placement="floating"
-        fill="outline"
-        class="ion-margin-top"
-        :auto-grow="true"
-        :rows="5"
-        :class="{ 'ion-invalid ion-touched': erreurs.preparation }"
-        :error-text="erreurs.preparation"
-      />
+      <ion-textarea v-model="preparation" label="Préparation" label-placement="floating" fill="outline"
+        class="ion-margin-top" :auto-grow="true" :rows="5" :class="{ 'ion-invalid ion-touched': erreurs.preparation }"
+        :error-text="erreurs.preparation" />
 
-      <ion-textarea
-        v-model="remarque"
-        label="Remarque (facultative)"
-        label-placement="floating"
-        fill="outline"
-        class="ion-margin-top"
-        :auto-grow="true"
-        :rows="3"
-      />
+      <ion-textarea v-model="remarque" label="Remarque (facultative)" label-placement="floating" fill="outline"
+        class="ion-margin-top" :auto-grow="true" :rows="3" />
 
       <ion-button expand="block" class="ion-margin-top" :disabled="envoiEnCours" @click="enregistrer">
         Enregistrer
