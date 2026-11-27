@@ -27,6 +27,18 @@
       </ion-select>
       <ion-note v-if="erreurs.categorie" color="danger">{{ erreurs.categorie }}</ion-note>
 
+      <!-- ICI ON MET LA PHOTO -->
+       <ion-button fill="outline" @click="prendrePhoto">
+        <ion-icon slot="icon-only" :icon="cameraOutline" />
+      </ion-button>
+      <ion-button fill="outline" @click="choisirDansGalerie">
+        <ion-icon slot="icon-only" :icon="imagesOutline" />
+      </ion-button>
+      <ion-button v-if="image" color="danger" fill="outline" @click="retirerImage">
+        <ion-icon slot="icon-only" :icon="trashOutline" />
+      </ion-button>
+      <img v-if="image" style="border-radius: 20%;" :src="image" alt="">
+
       <h2>Ingrédients</h2>
       <ion-item v-for="(ligne, index) in lignes" :key="index">
         <ion-input v-model="ligne.quantite" placeholder="500 g" />
@@ -60,10 +72,11 @@ import {
   IonInput, IonSelect, IonSelectOption, IonTextarea, IonItem, IonButton, IonIcon, IonNote,
   loadingController, toastController, useIonRouter,IonSpinner
 } from '@ionic/vue';
-import { trashOutline } from 'ionicons/icons';
+import { trashOutline, cameraOutline, imagesOutline } from 'ionicons/icons';
 import type { Categorie, NouvelleRecette } from '@/types/recette';
 import { getCategories } from '@/services/categorieService';
 import recetteService from '@/services/recetteService';
+import imageService from '@/services/imageService';
 import { useRoute } from 'vue-router';
 
 interface LigneFormulaire { libelle: string; quantite: string }
@@ -79,6 +92,7 @@ const categories = ref<Categorie[]>([]);
 const libelle = ref('');
 const idCategorie = ref('');
 const preparation = ref('');
+const image = ref<string | null>(null);
 const remarque = ref('');
 const lignes = ref<LigneFormulaire[]>([{ libelle: '', quantite: '' }]);
 const erreurs = ref<Record<string, string>>({});
@@ -92,6 +106,18 @@ function ajouterLigne() {
 
 function retirerLigne(index: number) {
   lignes.value.splice(index, 1);
+}
+
+function retirerImage() {
+  image.value = null;
+}
+
+async function prendrePhoto() {
+  image.value = await imageService.prendrePhoto();
+}
+
+async function choisirDansGalerie() {
+  image.value = await imageService.choisirDansGalerie();
 }
 
 function valider(): boolean {
@@ -111,9 +137,14 @@ async function enregistrer() {
   envoiEnCours.value = true;
 
   try {
+    // compresser l'image avant de l'envoyer au service
+    if (image.value) {
+      image.value = await imageService.compresser(image.value);
+    }
+
     const nouvelle: NouvelleRecette = {
       libelle: libelle.value,
-      image: null,
+      image: image.value,
       id_categorie: idCategorie.value,
       preparation: preparation.value,
       remarque: remarque.value,
@@ -156,11 +187,13 @@ onMounted(async () => {
   try {
     categories.value = await getCategories();
 
+    // SI EDITION
     if (idRecette) {
       const recette = await recetteService.getRecette(idRecette);
       libelle.value = recette.libelle;
       idCategorie.value = recette.id_categorie;
       preparation.value = recette.preparation;
+      image.value = recette.image ?? null;
       remarque.value = recette.remarque ?? '';
       // on transforme les lignes de la recette ({ ingredient, quantite })
       // en lignes du formulaire ({ libelle, quantite })
