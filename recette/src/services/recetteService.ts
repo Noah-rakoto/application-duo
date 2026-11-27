@@ -18,8 +18,15 @@ import {
 import Ingredients from "@/services/ingredientService";
 
 export default {
-  async getRecettes(): Promise<Recette[]> {
-    const snapshot = await getDocs(collection(db, "recettes"));
+  async getRecettes(idCategorie?: string | null): Promise<Recette[]> {
+    // par defaut
+    let q = query(collection(db, "recettes"));
+    // si y a une categorie 
+    if (idCategorie) {
+      q = query(collection(db, "recettes"), where("id_categorie", "==", idCategorie));
+    }
+
+    const snapshot = await getDocs(q);
     // snapshot.docs renvoie un NOUVEAU tableau a chaque lecture :
     // on le garde dans une variable pour que le tri ne soit pas perdu
     const docs = snapshot.docs;

@@ -6,6 +6,19 @@
       <ion-toolbar color="primary">
         <ion-title>Recettes</ion-title>
       </ion-toolbar>
+
+      <ion-toolbar>
+        <ion-searchbar :debounce="250" v-model="rechercheLibelle"></ion-searchbar>
+      </ion-toolbar>
+
+        <ion-segment scrollable v-model="idCategorie" @ion-change="charger">
+          <ion-segment-button value="null">
+            <ion-label>Toutes</ion-label>
+          </ion-segment-button>
+          <ion-segment-button v-for="c in categories" :key="c.id" :value="c.id">
+            <ion-label>{{ c.libelle }}</ion-label>
+          </ion-segment-button>
+        </ion-segment>
     </ion-header>
 
     <!-- Zone qui défile -->
@@ -37,7 +50,7 @@
 
       <!-- 4. La liste des recettes -->
       <ion-list v-else>
-        <ion-item v-for="r in recettes" :key="r.id" :router-link="`/tabs/recettes/${r.id}`">
+        <ion-item v-for="r in recettesFiltrees" :key="r.id" :router-link="`/tabs/recettes/${r.id}`">
           <ion-thumbnail slot="start">
             <img v-if="r.image" :src="r.image" alt="" />
           </ion-thumbnail>
@@ -64,21 +77,27 @@ import { ref, computed, onMounted } from 'vue';
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonRefresher, IonRefresherContent,
   IonList, IonItem, IonLabel, IonThumbnail, IonSpinner, IonText, IonButton, IonIcon,
-  IonFab, IonFabButton, onIonViewWillEnter,
+  IonFab, IonFabButton, onIonViewWillEnter, IonSearchbar, IonSegment
 } from '@ionic/vue';
 import { add } from 'ionicons/icons';
 import type { Categorie, Recette } from '@/types/recette';
 import { getCategories } from '@/services/categorieService';
 import recetteService from '@/services/recetteService';
 import { formatDate } from '../../utils/format';
+import { normaliser } from '../../utils/format';
 
 const recettes = ref<Recette[]>([]);
 const categories = ref<Categorie[]>([]);
 const chargement = ref(true);
 const erreur = ref<string | null>(null);
+const rechercheLibelle = ref<string>('');
+const idCategorie = ref<string>('');
 
 // Retrouver la catégorie d'une recette (cours, partie 3)
 const categoriesParId = computed(() => new Map(categories.value.map(c => [c.id, c])));
+const recettesFiltrees = computed(() => {
+  return rechercheLibelle.value == '' ? recettes.value :  recettes.value.filter((r) => normaliser(r.libelle).includes(normaliser(rechercheLibelle.value)));
+});
 
 function libelleCategorie(r: Recette): string {
   return categoriesParId.value.get(r.id_categorie)?.libelle ?? 'Sans catégorie';
@@ -89,7 +108,7 @@ async function charger() {
   chargement.value = true;
   erreur.value = null;
   try {
-    recettes.value = await recetteService.getRecettes();
+    recettes.value = await recetteService.getRecettes(idCategorie.value);
   } catch (e) {
     erreur.value = 'Impossible de charger les recettes.';
     console.error(e);
