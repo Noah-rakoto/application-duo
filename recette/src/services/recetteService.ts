@@ -40,7 +40,13 @@ export default {
   },
 
   async getIdsRecettesAvecIngredient(idIngredient: string[]): Promise<Set<string>> {
-    const q = query(collection(db, "recette_ingredients"), where("id_ingredient", "==", idIngredient));
+    // traiter si tous est dans la liste
+    // let q;
+    let q = query(collection(db, "recette_ingredients"), where("id_ingredient", "in", idIngredient));
+    if (idIngredient.includes("tous") || idIngredient.length === 0) {
+      q = query(collection(db, "recette_ingredients"));
+    }
+
     return new Set(await getDocs(q).then((snapshot) => snapshot.docs.map((m) => m.data().id_recette)));
   },
 

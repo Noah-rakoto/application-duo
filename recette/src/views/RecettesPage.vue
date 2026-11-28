@@ -20,9 +20,9 @@
           </ion-segment-button>
         </ion-segment>
 
-        <ion-select v-model="idIngredient" label="Rechercher un ingredient" label-placement="floating" fill="outline"
+        <ion-select v-model="idIngredient" :multiple="true" label="Rechercher un ingredient" label-placement="floating" fill="outline"
         class="ion-margin-top">
-          <ion-select-option :value="null">Tous</ion-select-option>
+          <ion-select-option value="tous">Tous</ion-select-option>
           <ion-select-option v-for="i in ingredients" :key="i.id" :value="i.id">
             {{ i.libelle }}
           </ion-select-option>
@@ -110,7 +110,7 @@ const chargement = ref(true);
 const erreur = ref<string | null>(null);
 const rechercheLibelle = ref<string>('');
 const idCategorie = ref<string>('');
-const idIngredient = ref<string | null>(null);
+const idIngredient = ref<string[]>(['tous']);
 const idsRecettesAvecIngredient = ref<Set<string>>(new Set());
 
 watch(idIngredient, async (newId) => {
@@ -149,6 +149,7 @@ async function charger() {
     console.error(e);
   } finally {
     chargement.value = false;
+    console.log(idIngredient.value)
   }
 }
 
@@ -160,8 +161,8 @@ async function rafraichir(event: CustomEvent) {
 
 function reinitialiserFiltres () {
   rechercheLibelle.value = '';  
-  idCategorie.value = 'tous'
-  idIngredient.value = null;
+  idCategorie.value = 'tous';
+  idIngredient.value = ['tous'];
   
 }
 
@@ -176,5 +177,8 @@ onMounted(async () => {
 });
 
 // - les recettes : à chaque arrivée sur la page
-onIonViewWillEnter(charger);
+onIonViewWillEnter(() => {
+  charger();
+  idIngredient.value = ['tous'];
+});
 </script>
