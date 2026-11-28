@@ -1,10 +1,10 @@
 <template>
   <ion-page>
-    <ion-header>
-      <ion-toolbar color="primary">
+    <ion-header class="ion-no-border">
+      <ion-toolbar>
         <!-- Retour vers la liste -->
         <ion-buttons slot="start">
-          <ion-back-button default-href="/tabs/recettes" />
+          <ion-back-button default-href="/tabs/recettes" text="" />
         </ion-buttons>
         <ion-title>{{ enEdition ? 'Éditer la recette' : 'Nouvelle recette' }}</ion-title>
       </ion-toolbar>
@@ -13,55 +13,71 @@
     <ion-content class="ion-padding">
       <!-- Chargement de la recette (mode édition) -->
       <div v-if="chargement" class="ion-text-center ion-padding">
-        <ion-spinner />
+        <ion-spinner name="dots" color="primary" />
       </div>
 
       <!-- Formulaire, affiché une fois la recette chargée -->
       <template v-else>
-      <ion-input v-model="libelle" label="Libellé" label-placement="floating" fill="outline"
+      <!-- ICI ON MET LA PHOTO -->
+      <div class="zone-photo" :class="{ vide: !image }">
+        <img v-if="image" :src="image" alt="">
+        <div v-else class="invite">
+          <span><ion-icon :icon="cameraOutline" /></span>
+          <p>Ajoutez une photo de votre plat</p>
+        </div>
+        <ion-button v-if="image" class="retirer" color="danger" aria-label="Retirer la photo" @click="retirerImage">
+          <ion-icon slot="icon-only" :icon="trashOutline" />
+        </ion-button>
+      </div>
+      <div class="photo">
+        <ion-button fill="clear" @click="prendrePhoto">
+          <ion-icon slot="start" :icon="cameraOutline" /> Caméra
+        </ion-button>
+        <ion-button fill="clear" @click="choisirDansGalerie">
+          <ion-icon slot="start" :icon="imagesOutline" /> Galerie
+        </ion-button>
+      </div>
+
+      <h2>Informations</h2>
+      <ion-input v-model="libelle" label="Libellé" label-placement="stacked" placeholder="Ex. : Romazava" class="champ"
         :class="{ 'ion-invalid ion-touched': erreurs.libelle }" :error-text="erreurs.libelle" />
 
-      <ion-select v-model="idCategorie" label="Catégorie" label-placement="floating" fill="outline"
-        class="ion-margin-top">
+      <ion-select v-model="idCategorie" label="Catégorie" label-placement="stacked" placeholder="Choisir"
+        class="champ" interface="alert">
         <ion-select-option v-for="c in categories" :key="c.id" :value="c.id">{{ c.libelle }}</ion-select-option>
       </ion-select>
       <ion-note v-if="erreurs.categorie" color="danger">{{ erreurs.categorie }}</ion-note>
 
-      <!-- ICI ON MET LA PHOTO -->
-       <ion-button fill="outline" @click="prendrePhoto">
-        <ion-icon slot="icon-only" :icon="cameraOutline" />
-      </ion-button>
-      <ion-button fill="outline" @click="choisirDansGalerie">
-        <ion-icon slot="icon-only" :icon="imagesOutline" />
-      </ion-button>
-      <ion-button v-if="image" color="danger" fill="outline" @click="retirerImage">
-        <ion-icon slot="icon-only" :icon="trashOutline" />
-      </ion-button>
-      <img v-if="image" style="border-radius: 20%;" :src="image" alt="">
-
-      <h2>Ingrédients</h2>
-      <ion-item v-for="(ligne, index) in lignes" :key="index">
-        <ion-input v-model="ligne.quantite" placeholder="500 g" />
+      <h2>Ingrédients <span class="pastille">{{ lignes.length }}</span></h2>
+      <div v-for="(ligne, index) in lignes" :key="index" class="ligne">
+        <ion-input v-model="ligne.quantite" placeholder="500 g" class="quantite" />
         <ion-input v-model="ligne.libelle" placeholder="ingrédient" />
-        <ion-button fill="clear" color="danger" @click="retirerLigne(index)">
+        <ion-button fill="clear" class="poubelle" aria-label="Retirer l'ingrédient" @click="retirerLigne(index)">
           <ion-icon slot="icon-only" :icon="trashOutline" />
         </ion-button>
-      </ion-item>
+      </div>
       <ion-note v-if="erreurs.ingredients" color="danger">{{ erreurs.ingredients }}</ion-note>
-      <ion-button fill="outline" class="ion-margin-top" @click="ajouterLigne">+ Ajouter un ingrédient</ion-button>
+      <ion-button expand="block" fill="clear" class="ajouter" @click="ajouterLigne">+ Ajouter un ingrédient</ion-button>
 
-      <ion-textarea v-model="preparation" label="Préparation" label-placement="floating" fill="outline"
-        class="ion-margin-top" :auto-grow="true" :rows="5" :class="{ 'ion-invalid ion-touched': erreurs.preparation }"
+      <h2>Préparation</h2>
+      <ion-textarea v-model="preparation" aria-label="Préparation" placeholder="1. Couper…&#10;2. Faire revenir…"
+        class="champ" :auto-grow="true" :rows="5" :class="{ 'ion-invalid ion-touched': erreurs.preparation }"
         :error-text="erreurs.preparation" />
 
-      <ion-textarea v-model="remarque" label="Remarque (facultative)" label-placement="floating" fill="outline"
-        class="ion-margin-top" :auto-grow="true" :rows="3" />
-
-      <ion-button expand="block" class="ion-margin-top" :disabled="envoiEnCours" @click="enregistrer">
-        Enregistrer
-      </ion-button>
+      <h2>Remarque <span class="facultatif">facultatif</span></h2>
+      <ion-textarea v-model="remarque" aria-label="Remarque" placeholder="Une astuce, une variante…"
+        class="champ" :auto-grow="true" :rows="3" />
       </template>
     </ion-content>
+
+    <!-- Bouton fixé en bas de l'écran -->
+    <ion-footer v-if="!chargement" class="ion-no-border">
+      <ion-toolbar>
+        <ion-button expand="block" color="secondary" class="enregistrer" :disabled="envoiEnCours" @click="enregistrer">
+          Enregistrer
+        </ion-button>
+      </ion-toolbar>
+    </ion-footer>
   </ion-page>
 </template>
 
@@ -69,7 +85,7 @@
 import { ref, onMounted } from 'vue';
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent,
-  IonInput, IonSelect, IonSelectOption, IonTextarea, IonItem, IonButton, IonIcon, IonNote,
+  IonInput, IonSelect, IonSelectOption, IonTextarea, IonButton, IonIcon, IonNote, IonFooter,
   loadingController, toastController, useIonRouter,IonSpinner
 } from '@ionic/vue';
 import { trashOutline, cameraOutline, imagesOutline } from 'ionicons/icons';
@@ -214,3 +230,5 @@ onMounted(async () => {
   }
 });
 </script>
+
+<style scoped src="../theme/pages/RecetteFormPage.css"></style>
