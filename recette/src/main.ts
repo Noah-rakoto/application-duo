@@ -1,5 +1,6 @@
 import { createApp } from 'vue';
 import { IonicVue } from '@ionic/vue';
+import { defineCustomElements } from '@ionic/pwa-elements/loader';
 import App from './App.vue';
 import router from './router';
 
@@ -14,7 +15,9 @@ import '@ionic/vue/css/display.css';
 import '@ionic/vue/css/palettes/dark.system.css';
 import './theme/variables.css';
 
-const app = createApp(App).use(IonicVue).use(router);
+defineCustomElements(window);          // autoiser la camera
+
+const app = createApp(App).use(IonicVue).use(router)
 
 router.isReady().then(() => {
   app.mount('#app');

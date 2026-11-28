@@ -1,0 +1,257 @@
+ion-content {
+  --padding-bottom: 110px;
+}
+
+/* ---------- En-tête ---------- */
+.entete {
+  padding: calc(env(safe-area-inset-top) + 28px) 20px 8px;
+}
+.sur-titre {
+  margin: 0 0 6px;
+  color: var(--app-muted);
+  font-weight: 500;
+}
+.entete h1 {
+  margin: 0;
+  font-size: 1.9rem;
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.recherche {
+  padding: 12px 16px 4px;
+  --icon-color: var(--app-muted);
+  --placeholder-color: var(--app-muted);
+  --placeholder-opacity: 1;
+  min-height: 56px;
+}
+
+/* ---------- Catégories : tuile + libellé dessous ---------- */
+.tuiles {
+  --background: transparent;
+  padding: 8px 12px 0;
+  width: auto;
+}
+.tuiles ion-segment-button {
+  --background: transparent;
+  --background-checked: transparent;
+  --background-hover: transparent;
+  --background-focused: transparent;
+  --color: var(--app-muted);
+  --color-checked: var(--app-text);
+  --indicator-height: 0;
+  --indicator-color: transparent;
+  --border-width: 0;
+  --padding-start: 4px;
+  --padding-end: 4px;
+  min-width: 84px;
+  flex-direction: column;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+.tuile {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  margin: 4px auto 6px;
+  border-radius: 22px;
+  background: var(--app-card);
+  box-shadow: var(--app-shadow);
+  font-size: 1.75rem;
+  color: var(--app-accent-text);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.tuiles ion-segment-button.segment-button-checked .tuile {
+  background: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(245, 154, 95, 0.45);
+}
+
+/* Filtre : carte blanche, icône à gauche, libellé au-dessus de la valeur */
+.filtre {
+  --padding-start: 12px;
+  --padding-end: 18px;
+  --padding-top: 10px;
+  --padding-bottom: 10px;
+  --highlight-color-focused: transparent;
+  margin: 14px 16px 0;
+  width: auto;
+  min-height: 72px;
+  border-radius: 22px;
+  background: var(--app-card);
+  box-shadow: var(--app-shadow);
+  font-weight: 700;
+}
+.filtre::part(label) {
+  color: var(--app-muted);
+  font-weight: 500;
+  font-size: 0.85rem;
+  transform: none;
+  margin-bottom: 2px;
+}
+.filtre::part(icon) {
+  color: var(--ion-color-primary);
+  opacity: 1;
+}
+.filtre-icone {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-right: 12px;
+  border-radius: 16px;
+  background: rgba(245, 154, 95, 0.18);
+  color: var(--app-accent-text);
+  font-size: 1.4rem;
+}
+
+/* ---------- États (chargement, erreur, vide) ---------- */
+.etat {
+  text-align: center;
+  padding: 48px 32px;
+  color: var(--app-muted);
+}
+.etat-icone {
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  margin: 0 auto 16px;
+  border-radius: 28px;
+  background: var(--app-card);
+  box-shadow: var(--app-shadow);
+  font-size: 2.4rem;
+  color: var(--app-accent-text);
+}
+.etat h3 {
+  color: var(--app-text);
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin: 0 0 8px;
+}
+
+/* ---------- Recettes ---------- */
+.recettes {
+  padding: 0 16px;
+}
+.titre-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 24px 4px 14px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.pastille {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  font-size: 0.75rem;
+}
+
+ion-card {
+  margin: 0;
+  border-radius: 28px;
+  background: var(--app-card);
+  box-shadow: var(--app-shadow);
+}
+ion-card img,
+.sans-image {
+  display: block;
+  width: 100%;
+  object-fit: cover;
+}
+.sans-image {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #fde3cf, #f7b98d);
+  color: #8a4419;
+  font-size: 3rem;
+}
+
+/* Carte vedette : grande image, texte par-dessus */
+.vedette {
+  position: relative;
+  margin-bottom: 14px;
+}
+.vedette img,
+.vedette .sans-image {
+  aspect-ratio: 16 / 11;
+  font-size: 5rem;
+}
+.vedette-texte {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 56px 20px 18px;
+  background: linear-gradient(to top, rgba(20, 18, 16, 0.85), transparent);
+  color: #fff;
+}
+.vedette-texte h3 {
+  margin: 8px 0 2px;
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.vedette-texte p {
+  margin: 0;
+  opacity: 0.8;
+  font-size: 0.85rem;
+}
+.puce {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Grille 2 colonnes */
+.grille {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.carte {
+  padding: 8px;
+  border-radius: 26px;
+}
+.carte img,
+.carte .sans-image {
+  aspect-ratio: 1;
+  border-radius: 20px;
+}
+.carte-texte {
+  padding: 10px 6px 6px;
+}
+.carte h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--app-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.categorie {
+  margin: 0;
+  color: var(--app-accent-text);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+.date {
+  margin: 2px 0 0;
+  color: var(--app-muted);
+  font-size: 0.72rem;
+}

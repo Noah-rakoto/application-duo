@@ -18,12 +18,13 @@
     "@ionic/pwa-elements": "^3.4.0",
     "@ionic/vue": "9.0.7",
     "@ionic/vue-router": "9.0.7",
+    "firebase": "^13.4.0",
     "ionicons": "8.1.0",
     "vue": "3.5.43",
     "vue-router": "5.4.0"
   },
   "devDependencies": {
-    "@capacitor/cli": "8.5.3",
+    "@capacitor/cli": "^8.6.2",
     "@vitejs/plugin-vue": "6.0.10",
     "@vue/tsconfig": "^0.9.1",
     "typescript": "^6.0.3",
