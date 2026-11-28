@@ -66,6 +66,13 @@
 
       <!-- 4. La liste des recettes -->
       <ion-list v-else>
+        <!-- quantite de resultat -->
+        <ion-item lines="none">
+          <ion-label>
+            <p>{{ recettesFiltrees.length }} recette(s) trouvée(s)</p>
+          </ion-label>
+        </ion-item>
+        <ion-item-divider></ion-item-divider>
         <ion-item v-for="r in recettesFiltrees" :key="r.id" :router-link="`/tabs/recettes/${r.id}`">
           <ion-thumbnail slot="start">
             <img v-if="r.image" :src="r.image" alt="" />
