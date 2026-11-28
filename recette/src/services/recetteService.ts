@@ -22,7 +22,7 @@ export default {
     // par defaut
     let q = query(collection(db, "recettes"));
     // si y a une categorie 
-    if (idCategorie) {
+    if (idCategorie !== "" && idCategorie !== null && idCategorie !== "tous") {
       q = query(collection(db, "recettes"), where("id_categorie", "==", idCategorie));
     }
 
@@ -38,6 +38,12 @@ export default {
     });
     return docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Recette);
   },
+
+  async getIdsRecettesAvecIngredient(idIngredient: string[]): Promise<Set<string>> {
+    const q = query(collection(db, "recette_ingredients"), where("id_ingredient", "==", idIngredient));
+    return new Set(await getDocs(q).then((snapshot) => snapshot.docs.map((m) => m.data().id_recette)));
+  },
+
   // get la recette avec ses ingredients (lorsqu'on clique sur une recette)
   async getRecette(id: string): Promise<RecetteDetail> {
     const recetteRef = doc(db, "recettes", id);

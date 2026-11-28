@@ -12,13 +12,21 @@
       </ion-toolbar>
 
         <ion-segment scrollable v-model="idCategorie" @ion-change="charger">
-          <ion-segment-button value="null">
+          <ion-segment-button value="tous">
             <ion-label>Toutes</ion-label>
           </ion-segment-button>
           <ion-segment-button v-for="c in categories" :key="c.id" :value="c.id">
             <ion-label>{{ c.libelle }}</ion-label>
           </ion-segment-button>
         </ion-segment>
+
+        <ion-select v-model="idIngredient" label="Rechercher un ingredient" label-placement="floating" fill="outline"
+        class="ion-margin-top">
+          <ion-select-option :value="null">Tous</ion-select-option>
+          <ion-select-option v-for="i in ingredients" :key="i.id" :value="i.id">
+            {{ i.libelle }}
+          </ion-select-option>
+        </ion-select>
     </ion-header>
 
     <!-- Zone qui défile -->
@@ -48,6 +56,14 @@
         </ion-text>
       </div>
 
+      <!-- 3.1. Liste Filtree vide -->
+      <div v-else-if="recettesFiltrees.length === 0 && recettes.length > 0" class="ion-text-center ion-padding">
+        <ion-text color="medium">
+          <p>Aucune recette ne correspond à votre recherche</p>
+          <ion-button @click="reinitialiserFiltres">Réinitialiser les filtres</ion-button>
+        </ion-text>
+      </div>
+
       <!-- 4. La liste des recettes -->
       <ion-list v-else>
         <ion-item v-for="r in recettesFiltrees" :key="r.id" :router-link="`/tabs/recettes/${r.id}`">
@@ -73,32 +89,50 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonRefresher, IonRefresherContent,
   IonList, IonItem, IonLabel, IonThumbnail, IonSpinner, IonText, IonButton, IonIcon,
-  IonFab, IonFabButton, onIonViewWillEnter, IonSearchbar, IonSegment
+  IonFab, IonFabButton, onIonViewWillEnter, IonSearchbar, IonSegment, IonSelect, IonSelectOption, IonSegmentButton
 } from '@ionic/vue';
 import { add } from 'ionicons/icons';
-import type { Categorie, Recette } from '@/types/recette';
+import type { Categorie, Ingredient, Recette } from '@/types/recette';
 import { getCategories } from '@/services/categorieService';
 import recetteService from '@/services/recetteService';
+import ingredientService from '@/services/ingredientService';
 import { formatDate } from '../../utils/format';
 import { normaliser } from '../../utils/format';
 
 const recettes = ref<Recette[]>([]);
 const categories = ref<Categorie[]>([]);
+const ingredients = ref<Ingredient[]>([]);
 const chargement = ref(true);
 const erreur = ref<string | null>(null);
 const rechercheLibelle = ref<string>('');
 const idCategorie = ref<string>('');
+const idIngredient = ref<string | null>(null);
+const idsRecettesAvecIngredient = ref<Set<string>>(new Set());
+
+watch(idIngredient, async (newId) => {
+  newId ? idsRecettesAvecIngredient.value = await recetteService.getIdsRecettesAvecIngredient(newId) : idsRecettesAvecIngredient.value = new Set();
+})
 
 // Retrouver la catégorie d'une recette (cours, partie 3)
 const categoriesParId = computed(() => new Map(categories.value.map(c => [c.id, c])));
 const recettesFiltrees = computed(() => {
-  return rechercheLibelle.value == '' ? recettes.value :  recettes.value.filter((r) => normaliser(r.libelle).includes(normaliser(rechercheLibelle.value)));
-});
+  let resultat = recettes.value;
 
+  if (rechercheLibelle.value !== '') {
+    const terme = normaliser(rechercheLibelle.value);
+    resultat = resultat.filter((r) => normaliser(r.libelle).includes(terme));
+  }
+
+  if (idIngredient.value !== null) {
+    resultat = resultat.filter((r) => idsRecettesAvecIngredient.value.has(r.id));
+  }
+
+  return resultat;
+});
 function libelleCategorie(r: Recette): string {
   return categoriesParId.value.get(r.id_categorie)?.libelle ?? 'Sans catégorie';
 }
@@ -109,6 +143,7 @@ async function charger() {
   erreur.value = null;
   try {
     recettes.value = await recetteService.getRecettes(idCategorie.value);
+    ingredients.value = await ingredientService.getIngredients();
   } catch (e) {
     erreur.value = 'Impossible de charger les recettes.';
     console.error(e);
@@ -121,6 +156,13 @@ async function charger() {
 async function rafraichir(event: CustomEvent) {
   await charger();
   (event.target as HTMLIonRefresherElement).complete();
+}
+
+function reinitialiserFiltres () {
+  rechercheLibelle.value = '';  
+  idCategorie.value = 'tous'
+  idIngredient.value = null;
+  
 }
 
 // QUAND charger :

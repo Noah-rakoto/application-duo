@@ -5,7 +5,10 @@ import { addDoc, collection, getDoc, getDocs, query, where } from "firebase/fire
 export default {
     async getIngredients(): Promise<Ingredient[]> {
         const snapshot = await getDocs(collection(db, "ingredients"));
-        return snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}) as Ingredient)
+        const ingredients = snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}) as Ingredient);
+        // trier par ordre alphabetique
+        ingredients.sort((a, b) => a.libelle.localeCompare(b.libelle));
+        return ingredients;
     },
 
     async trouverOuCreerIngredient(libelle: string): Promise<Ingredient> {
