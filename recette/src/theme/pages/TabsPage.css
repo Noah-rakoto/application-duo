@@ -1,0 +1,57 @@
+/* Barre du bas : petite pilule sombre qui flotte au centre */
+ion-tab-bar {
+    --background: var(--app-dock);
+    align-self: center;
+    gap: 6px;
+    height: 64px;
+    /* largeur fixe : les onglets Ionic n'ont pas de largeur propre, sinon la pilule s'écrase */
+    width: 214px;
+    flex: none;
+    padding: 6px;
+    margin: 0 auto calc(env(safe-area-inset-bottom) + 14px);
+    border: none;
+    border-radius: 999px;
+    box-shadow: 0 12px 30px rgba(38, 36, 34, 0.28);
+}
+
+ion-tab-bar.cachee {
+    display: none;
+}
+
+/* Onglet : icône + libellé côte à côte, fond clair quand il est actif */
+ion-tab-button {
+    --color: #a8a29e;
+    --color-selected: #ffffff;
+    --padding-start: 18px;
+    --padding-end: 20px;
+    flex: none;
+    width: 144px;
+    height: 52px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: none;
+    letter-spacing: 0;
+    transition: background 0.2s ease;
+}
+ion-tab-button.tab-selected {
+    background: rgba(255, 255, 255, 0.1);
+}
+ion-tab-button ion-icon {
+    font-size: 22px;
+    margin-right: 8px;
+}
+ion-tab-button.tab-selected ion-icon {
+    color: var(--ion-color-primary);
+}
+
+/* Bouton « + » : carré arrondi orange */
+.bouton-central {
+    --border-radius: 999px;
+    --box-shadow: none;
+    flex: none;
+    width: 52px;
+    height: 52px;
+    margin: 0;
+    font-size: 26px;
+}

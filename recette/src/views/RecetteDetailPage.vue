@@ -1,70 +1,76 @@
 <template>
   <ion-page>
-    <ion-header>
-      <ion-toolbar color="primary">
-        <!-- Retour vers la liste -->
-        <ion-buttons slot="start">
-          <ion-back-button default-href="/tabs/recettes" />
-        </ion-buttons>
-        <ion-title>{{ recette?.libelle ?? 'Recette' }}</ion-title>
-
+    <ion-content>
+      <!-- Boutons flottants par-dessus la photo -->
+      <div class="actions">
+        <ion-back-button default-href="/tabs/recettes" text="" class="rond" />
         <!-- Éditer / Supprimer, seulement une fois la recette chargée -->
-        <ion-buttons v-if="recette" slot="end">
-          <ion-button :router-link="`/tabs/recettes/${recette.id}/modifier`" aria-label="Éditer">
+        <div v-if="recette" class="actions-droite">
+          <ion-button class="rond" :router-link="`/tabs/recettes/${recette.id}/modifier`" aria-label="Éditer">
             <ion-icon slot="icon-only" :icon="createOutline" />
           </ion-button>
-          <ion-button color="danger" aria-label="Supprimer" @click="supprimer">
+          <ion-button class="rond danger" aria-label="Supprimer" @click="supprimer">
             <ion-icon slot="icon-only" :icon="trashOutline" />
           </ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
+        </div>
+      </div>
 
-    <ion-content>
       <!-- 1. Chargement en cours -->
-      <div v-if="chargement" class="ion-text-center ion-padding">
-        <ion-spinner />
+      <div v-if="chargement" class="etat">
+        <ion-spinner name="dots" color="primary" />
       </div>
 
       <!-- 2. Erreur (ex. : /tabs/recettes/inexistant) -->
-      <div v-else-if="erreur" class="ion-padding">
-        <ion-text color="danger">
-          <p>{{ erreur }}</p>
-        </ion-text>
-        <ion-button expand="block" @click="charger">Réessayer</ion-button>
+      <div v-else-if="erreur" class="etat">
+        <span class="etat-icone"><ion-icon :icon="alertCircleOutline" /></span>
+        <p>{{ erreur }}</p>
+        <ion-button color="secondary" @click="charger">Réessayer</ion-button>
       </div>
 
       <!-- 3. La recette -->
       <div v-else-if="recette">
-        <!-- Image pleine largeur, seulement si elle existe -->
+        <!-- Photo pleine largeur (ou un fond coloré si elle n'existe pas) -->
         <img v-if="recette.image" :src="recette.image" alt="" class="image-recette" />
+        <div v-else class="image-recette sans-image"><ion-icon :icon="iconeCategorie(libelleCategorie)" /></div>
 
-        <div class="ion-padding">
-          <ion-badge>{{ libelleCategorie }}</ion-badge>
+        <!-- Feuille qui remonte sur la photo -->
+        <div class="feuille">
+          <span class="puce"><ion-icon :icon="iconeCategorie(libelleCategorie)" /> {{ libelleCategorie }}</span>
+          <h1>{{ recette.libelle }}</h1>
+
+          <div class="stats">
+            <div>
+              <strong>{{ recette.lignes.length }}</strong>
+              <span>ingrédient(s)</span>
+            </div>
+            <div>
+              <strong>{{ formatDate(recette.date_creation).split(' ')[0] }}</strong>
+              <span>créée le</span>
+            </div>
+          </div>
 
           <h2>Ingrédients</h2>
-          <ion-list v-if="recette.lignes.length > 0" lines="none">
-            <ion-item v-for="ligne in recette.lignes" :key="ligne.ingredient.id">
-              <ion-label>{{ ligne.quantite }} — {{ ligne.ingredient.libelle }}</ion-label>
-            </ion-item>
-          </ion-list>
-          <ion-text v-else color="medium"><p>Aucun ingrédient</p></ion-text>
+          <ul v-if="recette.lignes.length > 0" class="carte ingredients">
+            <li v-for="ligne in recette.lignes" :key="ligne.ingredient.id">
+              <span class="nom">{{ ligne.ingredient.libelle }}</span>
+              <span class="quantite">{{ ligne.quantite }}</span>
+            </li>
+          </ul>
+          <p v-else class="vide">Aucun ingrédient</p>
 
           <h2>Préparation</h2>
-          <p class="texte-long">{{ recette.preparation }}</p>
+          <p class="texte-long carte">{{ recette.preparation }}</p>
 
           <!-- Remarque : seulement si elle n'est pas vide -->
           <template v-if="recette.remarque?.trim()">
             <h2>Remarque</h2>
-            <p class="texte-long">{{ recette.remarque }}</p>
+            <p class="texte-long carte remarque"><ion-icon :icon="bulbOutline" class="ampoule" /> {{ recette.remarque }}</p>
           </template>
 
-          <ion-text color="medium">
-            <small>
-              Créée le {{ formatDate(recette.date_creation) }}
-              · Modifiée le {{ formatDate(recette.date_derniere_modif) }}
-            </small>
-          </ion-text>
+          <p class="dates">
+            Créée le {{ formatDate(recette.date_creation) }}
+            · Modifiée le {{ formatDate(recette.date_derniere_modif) }}
+          </p>
         </div>
       </div>
     </ion-content>
@@ -75,15 +81,15 @@
 import { ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import {
-  IonPage, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent,
-  IonSpinner, IonText, IonButton, IonBadge, IonList, IonItem, IonLabel, IonIcon, onIonViewWillEnter,
+  IonPage, IonBackButton, IonContent,
+  IonSpinner, IonButton, IonIcon, onIonViewWillEnter,
   alertController, loadingController, toastController, useIonRouter,
 } from '@ionic/vue';
-import { createOutline, trashOutline } from 'ionicons/icons';
+import { createOutline, trashOutline, alertCircleOutline, bulbOutline } from 'ionicons/icons';
 import type { Categorie, RecetteDetail } from '@/types/recette';
 import { getCategories } from '@/services/categorieService';
 import recetteService from '@/services/recetteService';
-import { formatDate } from '../../utils/format';
+import { formatDate, iconeCategorie } from '../../utils/format';
 
 const route = useRoute();
 const ionRouter = useIonRouter();
@@ -163,14 +169,4 @@ async function supprimer() {
 onIonViewWillEnter(charger);
 </script>
 
-<style scoped>
-.image-recette {
-  width: 100%;
-  display: block;
-}
-
-/* Garder les retours à la ligne (cours, partie 5) */
-.texte-long {
-  white-space: pre-line;
-}
-</style>
+<style scoped src="../theme/pages/RecetteDetailPage.css"></style>

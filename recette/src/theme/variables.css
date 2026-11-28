@@ -1,32 +1,118 @@
 /*
- * Couleurs de l'application (charte ITUniversity).
+ * Thème de l'application : crème + orange pêche + barre d'onglets anthracite.
  * Ionic utilise ces variables dans tous ses composants :
- * <ion-button color="primary">, <ion-badge color="secondary">...
+ * <ion-button color="primary">, <ion-badge>, <ion-fab-button>...
  */
-:root {
-  --ion-color-primary: #080d2c;
-  --ion-color-primary-rgb: 34, 46, 118;
-  --ion-color-primary-contrast: #ffffff;
-  --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #1e2868;
-  --ion-color-primary-tint: #384384;
 
-  --ion-color-secondary: #76b729;
-  --ion-color-secondary-rgb: 118, 183, 41;
-  --ion-color-secondary-contrast: #000000;
-  --ion-color-secondary-contrast-rgb: 0, 0, 0;
-  --ion-color-secondary-shade: #68a124;
-  --ion-color-secondary-tint: #84be3e;
+/* Jetons de couleur : clair par défaut, redéfinis en sombre plus bas */
+:root {
+  --app-bg: #f4f0eb;
+  --app-card: #ffffff;
+  --app-text: #262422;
+  --app-muted: #8a8580;
+  --app-soft: #ebe5dd;
+  --app-dock: #262422;
+  --app-accent-text: #b05a24; /* orange foncé : lisible en texte sur fond clair */
+  --app-shadow: 0 6px 20px rgba(38, 36, 34, 0.07);
+  --app-radius: 24px;
 }
 
-/* En mode sombre, le bleu marine est trop foncé : on l'éclaircit */
 @media (prefers-color-scheme: dark) {
   :root {
-    --ion-color-primary: #8f9bea;
-    --ion-color-primary-rgb: 143, 155, 234;
-    --ion-color-primary-contrast: #000000;
-    --ion-color-primary-contrast-rgb: 0, 0, 0;
-    --ion-color-primary-shade: #7e88ce;
-    --ion-color-primary-tint: #9aa5ec;
+    --app-bg: #171615;
+    --app-card: #232120;
+    --app-text: #f4f0eb;
+    --app-muted: #a39d97;
+    --app-soft: #2e2b29;
+    --app-dock: #0d0c0c;
+    --app-accent-text: #f59a5f;
+    --app-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
   }
+}
+
+/* :root.md / :root.ios : même poids que la palette sombre d'Ionic, donc on passe après elle */
+:root.md,
+:root.ios {
+  --ion-font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --ion-background-color: var(--app-bg);
+  --ion-text-color: var(--app-text);
+  --ion-item-background: var(--app-card);
+  --ion-card-background: var(--app-card);
+  --ion-toolbar-background: var(--app-bg);
+  --ion-toolbar-border-color: transparent;
+  --ion-tab-bar-background: var(--app-dock);
+  --ion-tab-bar-color: #a8a29e;
+  --ion-tab-bar-color-selected: var(--ion-color-primary);
+
+  /* Orange pêche, texte foncé dessus (lisible, comme les icônes de la maquette) */
+  --ion-color-primary: #f59a5f;
+  --ion-color-primary-rgb: 245, 154, 95;
+  --ion-color-primary-contrast: #262422;
+  --ion-color-primary-contrast-rgb: 38, 36, 34;
+  --ion-color-primary-shade: #d88754;
+  --ion-color-primary-tint: #f6a46f;
+
+  /* Anthracite : boutons principaux sombres (« Get Started ») */
+  --ion-color-secondary: #262422;
+  --ion-color-secondary-rgb: 38, 36, 34;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #211f1e;
+  --ion-color-secondary-tint: #3c3a38;
+
+  --ion-color-medium: #8a8580;
+  --ion-color-medium-rgb: 138, 133, 128;
+  --ion-color-medium-contrast: #ffffff;
+  --ion-color-medium-contrast-rgb: 255, 255, 255;
+  --ion-color-medium-shade: #797570;
+  --ion-color-medium-tint: #96918d;
+}
+
+/* ---------- En-têtes : plats, sans ombre ---------- */
+ion-header {
+  box-shadow: none !important;
+}
+ion-title {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- Boutons et champs arrondis ---------- */
+:root ion-button {
+  --border-radius: 16px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+:root ion-input,
+:root ion-select,
+:root ion-textarea {
+  --border-radius: 16px;
+  --border-color: var(--app-soft);
+  --background: var(--app-card);
+}
+:root ion-searchbar {
+  --background: var(--app-card);
+  --border-radius: 20px;
+  --box-shadow: var(--app-shadow);
+}
+:root ion-badge {
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 6px;
+  --padding-bottom: 6px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* ---------- Bouton flottant : carré arrondi orange ---------- */
+:root ion-fab-button {
+  --border-radius: 20px;
+  --box-shadow: 0 8px 24px rgba(245, 154, 95, 0.45);
+}
+
+/* ---------- Barre d'onglets : voir TabsPage.vue ---------- */
+:root ion-tab-bar {
+  border-top: none;
 }
